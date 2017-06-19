@@ -24,7 +24,8 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= Seq(
       "com.typesafe.slick" %% "slick" % "3.2.0",
       "org.slf4j" % "slf4j-nop" % "1.6.4",
-      "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0"
+      "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
+      "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     ),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
     resolvers += Resolver.bintrayRepo("buildo", "maven")

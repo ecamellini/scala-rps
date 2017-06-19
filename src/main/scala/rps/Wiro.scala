@@ -40,7 +40,11 @@ object controllers {
       move: String
     ): Future[Either[Error, PlayResult]] = {
       RPS.run(move) match {
-        case Some((result, userMove, computerMove)) => Future(Right(PlayResult(result, userMove, computerMove)))
+        case Some((result, userMove, computerMove)) => {
+          val res = PlayResult(result, userMove, computerMove)
+          val future = ResultDataModule.createResult(res)
+          future.map(_ => Right(res)) // The DB interaction directly returs future
+        }
         case None => Future(Left(Error(s"${move} is an invalid move")))
       }
     }
