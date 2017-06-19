@@ -3,9 +3,10 @@ package rps
 import models._
 
 import slick._
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.PostgresProfile.api._
 import scala.reflect.ClassTag
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import io.buildo.enumero.{ CaseEnum, CaseEnumSerialization }
 
@@ -43,4 +44,7 @@ object ResultDataModule {
 
   def createResult(p: PlayResult): Future[Int] =
     db.run(gameResults += p)
+
+  def getResults(): Future[List[PlayResult]] =
+    db.run(gameResults.result).map(_.toList)
 }

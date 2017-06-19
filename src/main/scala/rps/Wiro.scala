@@ -33,6 +33,9 @@ object controllers {
     def play(
       move: String
     ): Future[Either[Error, PlayResult]]
+
+    @query
+    def results(): Future[Either[Error, List[PlayResult]]]
   }
 
   class RpsControllerImpl() extends RpsController {
@@ -47,6 +50,10 @@ object controllers {
         }
         case None => Future(Left(Error(s"${move} is an invalid move")))
       }
+    }
+
+    def results(): Future[Either[Error, List[PlayResult]]] = {
+      ResultDataModule.getResults().map(Right(_))
     }
   }
 }
