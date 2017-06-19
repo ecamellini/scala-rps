@@ -24,7 +24,8 @@ object controllers {
   import wiro.annotation._
   import FailSupport._
 
-  case class Error(message: String)
+  case class UnprocessableEntityError(message: String)
+  case class InternalServerError(message: String)
 
   @path("rps")
   trait RpsController {
@@ -32,27 +33,27 @@ object controllers {
     @command
     def play(
       move: String
-    ): Future[Either[Error, PlayResult]]
+    ): Future[Either[UnprocessableEntityError, PlayResult]]
 
     @query
-    def results(): Future[Either[Error, List[PlayResult]]]
+    def results(): Future[Either[InternalServerError, List[PlayResult]]]
   }
 
   class RpsControllerImpl() extends RpsController {
     def play(
       move: String
-    ): Future[Either[Error, PlayResult]] = {
+    ): Future[Either[UnprocessableEntityError, PlayResult]] = {
       RPS.run(move) match {
         case Some((result, userMove, computerMove)) => {
           val res = PlayResult(result, userMove, computerMove)
           val future = ResultDataModule.createResult(res)
           future.map(_ => Right(res)) // The DB interaction directly returs future
         }
-        case None => Future(Left(Error(s"${move} is an invalid move")))
+        case None => Future(Left(UnprocessableEntityError(s"${move} is an invalid move")))
       }
     }
 
-    def results(): Future[Either[Error, List[PlayResult]]] = {
+    def results(): Future[Either[InternalServerError, List[PlayResult]]] = {
       ResultDataModule.getResults().map(Right(_))
     }
   }
@@ -60,12 +61,20 @@ object controllers {
 
 object errors {
   import FailSupport._
-  import controllers.Error
+  import controllers.UnprocessableEntityError
+  import controllers.InternalServerError
 
   import io.circe.syntax._
-  implicit def errorToResponse = new ToHttpResponse[Error] {
-    def response(error: Error) = HttpResponse(
+  implicit def unprocessableEntityErrorToResponse = new ToHttpResponse[UnprocessableEntityError] {
+    def response(error: UnprocessableEntityError) = HttpResponse(
       status = StatusCodes.UnprocessableEntity,
+      entity = HttpEntity(ContentType(MediaTypes.`application/json`), error.asJson.noSpaces)
+    )
+  }
+
+  implicit def internalServerErrorToResponse = new ToHttpResponse[InternalServerError] {
+    def response(error: InternalServerError) = HttpResponse(
+      status = StatusCodes.InternalServerError,
       entity = HttpEntity(ContentType(MediaTypes.`application/json`), error.asJson.noSpaces)
     )
   }
